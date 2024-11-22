@@ -12,8 +12,8 @@ const sequelize = new Sequelize(
       max: config.pool.max,
       min: config.pool.min,
       acquire: config.pool.acquire,
-      idle: config.pool.idle
-    }
+      idle: config.pool.idle,
+    },
   }
 );
 
@@ -22,14 +22,24 @@ const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
-db.user = require("../models/user.model.js")(sequelize, Sequelize);
-db.role = require("../models/role.model.js")(sequelize, Sequelize);
+// Importar modelos
+db.user = require("./user.model.js")(sequelize, Sequelize);
+db.role = require("./role.model.js")(sequelize, Sequelize);
+db.cultivo = require("./cultivo.model.js")(sequelize, Sequelize);
+db.parcela = require("./pasela.model.js")(sequelize, Sequelize);
+db.sensorData = require("./sensorData.model.js")(sequelize, Sequelize);
 
+// Relaciones
 db.role.belongsToMany(db.user, {
-  through: "user_roles"
+  through: "user_roles",
 });
 db.user.belongsToMany(db.role, {
-  through: "user_roles"
+  through: "user_roles",
+});
+
+// Sincronización de las tablas con la base de datos
+db.sequelize.sync({ force: false }).then(() => {
+  console.log("Database synced successfully.");
 });
 
 db.ROLES = ["user", "admin", "moderator"];
