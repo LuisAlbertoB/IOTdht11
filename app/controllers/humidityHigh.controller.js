@@ -37,3 +37,27 @@ exports.associateHighHumidity = async (req, res) => {
     res.status(500).send({ message: error.message || "Error al asociar humedad alta." });
   }
 };
+
+// Método GET para obtener los registros de HumidityHigh
+exports.getHighHumidityRecords = async (req, res) => {
+  try {
+    // Obtener todos los registros de HumidityHigh
+    const highHumidityRecords = await HumidityHigh.findAll({
+      include: [
+        {
+          model: SensorData, // Incluir los datos del sensor relacionados
+          required: true // Para hacer un JOIN entre HumidityHigh y SensorData
+        }
+      ]
+    });
+
+    if (highHumidityRecords.length === 0) {
+      return res.status(404).send({ message: "No se encontraron registros de humedad alta." });
+    }
+
+    // Responder con los registros de humedad alta
+    res.status(200).send(highHumidityRecords);
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Error al obtener los registros de humedad alta." });
+  }
+};

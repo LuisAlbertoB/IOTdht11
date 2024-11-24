@@ -5,10 +5,9 @@ const { Op } = require("sequelize");
 
 exports.associateLowHumidity = async (req, res) => {
   try {
-    // Umbral de humedad para considerar "baja" (ajustable según necesidad)
-    const lowHumidityThreshold = 30; // Ejemplo, 30% de humedad
+    const lowHumidityThreshold = 30; // Umbral de humedad baja
 
-    // Buscar registros de SensorData con humedad baja
+    // Buscar registros con humedad baja
     const lowHumidityData = await SensorData.findAll({
       where: {
         humidity: {
@@ -17,14 +16,12 @@ exports.associateLowHumidity = async (req, res) => {
       }
     });
 
-    // Recorrer los datos de SensorData y asociarlos a la tabla HumidityLow
+    // Asociar a HumidityLow
     for (let data of lowHumidityData) {
-      // Verificar si el sensorDataId ya está asociado en HumidityLow
       const existingAssociation = await HumidityLow.findOne({
         where: { sensorDataId: data.id }
       });
 
-      // Si no existe la asociación, crearla
       if (!existingAssociation) {
         await HumidityLow.create({
           sensorDataId: data.id
@@ -32,8 +29,25 @@ exports.associateLowHumidity = async (req, res) => {
       }
     }
 
-    res.status(200).send({ message: "Asociación de registros con humedad baja completada." });
+    res.status(200).send({ message: "Asociación de humedad baja completada." });
   } catch (error) {
     res.status(500).send({ message: error.message || "Error al asociar humedad baja." });
+  }
+};
+
+exports.getLowHumidityAssociations = async (req, res) => {
+  try {
+    // Obtener todas las asociaciones de humedad baja
+    const associations = await HumidityLow.findAll({
+      include: {
+        model: SensorData,
+        as: "sensor_datum", // Asegúrate de que el alias coincida con tu asociación en el modelo
+        attributes: ['id', 'humidity', 'temperature'] // Los campos que deseas obtener
+      }
+    });
+
+    res.status(200).send(associations);
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Error al obtener las asociaciones de humedad baja." });
   }
 };
