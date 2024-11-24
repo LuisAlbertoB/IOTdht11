@@ -2,7 +2,6 @@ const db = require("../models");
 const TemperatureHigh = db.temperatureHigh;
 const SensorData = db.sensorData;
 
-// Obtener todas las temperaturas altas con datos relacionados de sensorData
 exports.getAllTemperatureHigh = async (req, res) => {
   try {
     const data = await TemperatureHigh.findAll({

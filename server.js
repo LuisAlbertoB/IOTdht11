@@ -45,6 +45,8 @@ var corsOptions = {
   require('./app/routes/humidityLow.routes')(app);
   require('./app/routes/temperatureHigh.routes')(app);
   require('./app/routes/temperatureLow.routes')(app);
+  require('./app/routes/statistics.routes')(app);
+  require('./app/routes/spoiledBread.routes')(app);
 
   // Import the MQTT service to connect to the broker and subscribe
   require('./app/services/mqttService');  // Import the MQTT service
