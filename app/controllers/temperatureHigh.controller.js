@@ -1,46 +1,59 @@
 const db = require("../models");
-const TemperatureHigh = db.temperatureHigh;
+const TemperatureHigh = db.temperatureHigh;  // Tabla de temperatura alta
 const SensorData = db.sensorData;
+const { Op } = require("sequelize");
 
-exports.getAllTemperatureHigh = async (req, res) => {
+// Método para asociar los registros de temperatura alta
+exports.associateHighTemperature = async (req, res) => {
   try {
-    const data = await TemperatureHigh.findAll({
-      include: [{
-        model: SensorData,
-        attributes: ['temperature', 'humidity', 'timestamp']
-      }]
+    // Umbral de temperatura para considerar "alta" (ajustable según necesidad)
+    const highTemperatureThreshold = 30; // Ejemplo, 30°C de temperatura
+
+    // Buscar registros de SensorData con temperatura alta
+    const highTemperatureData = await SensorData.findAll({
+      where: {
+        temperature: {
+          [Op.gt]: highTemperatureThreshold
+        }
+      }
     });
-    res.status(200).send(data);
-  } catch (error) {
-    res.status(500).send({ message: error.message || "Error al obtener los datos de temperatura alta" });
-  }
-};
 
-// Asociar registros de temperatura alta a la tabla TemperatureHigh
-exports.associateHighTemperatures = async (req, res) => {
-  try {
-    // Paso 1: Obtener todos los registros de la tabla sensorData
-    const sensorData = await SensorData.findAll();
-    
-    // Paso 2: Filtrar los registros con temperaturas elevadas (ajustar el umbral según lo necesites)
-    const highTemperatureRecords = sensorData.filter(record => record.temperature > 30); // Asumimos que 30°C es el umbral
-
-    // Paso 3: Verificar si esos registros ya están asociados con 'TemperatureHigh'
-    for (const record of highTemperatureRecords) {
+    // Recorrer los datos de SensorData y asociarlos a la tabla TemperatureHigh
+    for (let data of highTemperatureData) {
+      // Verificar si el sensorDataId ya está asociado en TemperatureHigh
       const existingAssociation = await TemperatureHigh.findOne({
-        where: { sensorDataId: record.id }
+        where: { sensorDataId: data.id }
       });
 
-      // Si no está asociado, crear la asociación
+      // Si no existe la asociación, crearla
       if (!existingAssociation) {
         await TemperatureHigh.create({
-          sensorDataId: record.id
+          sensorDataId: data.id
         });
       }
     }
 
-    res.status(200).send({ message: "Asociación de registros con temperaturas elevadas completada." });
+    res.status(200).send({ message: "Asociación de registros con temperatura alta completada." });
   } catch (error) {
-    res.status(500).send({ message: error.message || "Error al asociar las temperaturas elevadas." });
+    res.status(500).send({ message: error.message || "Error al asociar temperatura alta." });
+  }
+};
+
+// Método para obtener los últimos 20 registros de temperatura alta
+exports.getRecentTemperatureHigh = async (req, res) => {
+  try {
+    // Obtener los últimos 20 registros de temperatura alta
+    const data = await TemperatureHigh.findAll({
+      include: [{
+        model: SensorData,
+        attributes: ['temperature', 'humidity', 'timestamp']
+      }],
+      order: [['createdAt', 'DESC']],
+      limit: 20
+    });
+
+    res.status(200).send(data);
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Error al obtener los registros de temperatura alta." });
   }
 };

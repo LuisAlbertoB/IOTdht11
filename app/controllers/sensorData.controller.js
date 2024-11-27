@@ -41,3 +41,17 @@ exports.clearSensorData = async (req, res) => {
     res.status(500).send({ message: error.message || "Error al vaciar la tabla" });
   }
 };
+
+// Obtener los últimos 20 registros de datos del sensor
+exports.getRecentSensorData = async (req, res) => {
+  try {
+    const data = await SensorData.findAll({
+      order: [['timestamp', 'DESC']], // Ordenar por fecha de los más recientes
+      limit: 20 // Limitar a los últimos 20 registros
+    });
+
+    res.status(200).send(data);
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Error al obtener los últimos datos del sensor" });
+  }
+};

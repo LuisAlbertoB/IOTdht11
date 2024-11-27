@@ -3,6 +3,7 @@ const HumidityHigh = db.humidityHigh;
 const SensorData = db.sensorData;
 const { Op } = require("sequelize");
 
+// Método para asociar los registros de humedad alta
 exports.associateHighHumidity = async (req, res) => {
   try {
     // Umbral de humedad para considerar "alta" (ajustable según necesidad)
@@ -38,25 +39,21 @@ exports.associateHighHumidity = async (req, res) => {
   }
 };
 
-// Método GET para obtener los registros de HumidityHigh
-exports.getHighHumidityRecords = async (req, res) => {
+// Método para obtener los últimos 20 registros de humedad alta
+exports.getRecentHumidityHigh = async (req, res) => {
   try {
-    // Obtener todos los registros de HumidityHigh
-    const highHumidityRecords = await HumidityHigh.findAll({
-      include: [
-        {
-          model: SensorData, // Incluir los datos del sensor relacionados
-          required: true // Para hacer un JOIN entre HumidityHigh y SensorData
-        }
-      ]
+    // Obtener los últimos 20 registros de humedad alta
+    const data = await HumidityHigh.findAll({
+      include: [{
+        model: SensorData,
+        attributes: ['temperature', 'humidity', 'timestamp'] // Seleccionar atributos de SensorData
+      }],
+      order: [['createdAt', 'DESC']], // Ordenar por fecha de creación descendente (los más recientes)
+      limit: 20 // Limitar a los últimos 20 registros
     });
 
-    if (highHumidityRecords.length === 0) {
-      return res.status(404).send({ message: "No se encontraron registros de humedad alta." });
-    }
-
-    // Responder con los registros de humedad alta
-    res.status(200).send(highHumidityRecords);
+    // Enviar los registros obtenidos como respuesta
+    res.status(200).send(data);
   } catch (error) {
     res.status(500).send({ message: error.message || "Error al obtener los registros de humedad alta." });
   }

@@ -3,6 +3,7 @@ const HumidityLow = db.humidityLow;
 const SensorData = db.sensorData;
 const { Op } = require("sequelize");
 
+// Asociar registros de humedad baja a la tabla HumidityLow
 exports.associateLowHumidity = async (req, res) => {
   try {
     const lowHumidityThreshold = 30; // Umbral de humedad baja
@@ -35,15 +36,18 @@ exports.associateLowHumidity = async (req, res) => {
   }
 };
 
+// Obtener las últimas 20 asociaciones de humedad baja
 exports.getLowHumidityAssociations = async (req, res) => {
   try {
-    // Obtener todas las asociaciones de humedad baja
+    // Obtener las últimas 20 asociaciones de humedad baja
     const associations = await HumidityLow.findAll({
       include: {
         model: SensorData,
         as: "sensor_datum", // Asegúrate de que el alias coincida con tu asociación en el modelo
-        attributes: ['id', 'humidity', 'temperature'] // Los campos que deseas obtener
-      }
+        attributes: ['id', 'humidity', 'temperature', 'timestamp'] // Los campos que deseas obtener
+      },
+      order: [['createdAt', 'DESC']], // Ordenar por fecha de creación, de los más recientes
+      limit: 20 // Limitar a los últimos 20 registros
     });
 
     res.status(200).send(associations);
